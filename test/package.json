@@ -1,5 +1,5 @@
 {
-  "name": "lifescope-xr",
+  "name": "lifescope-xr-test",
   "version": "1.0.0",
   "engines": {
     "node": "10.0.0",
@@ -17,14 +17,25 @@
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "precommit": "npm run lint"
   },
+  "devDependencies": {
+    "babel-eslint": "^8.2.1",
+    "babel-jest": "^22.2.2",
+    "eslint": "^4.18.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-prettier": "^2.6.0",
+    "flow-bin": "0.65.0",
+    "jest": "^22.3.0",
+    "nodemon": "^1.15.0",
+    "prettier": "^1.10.2"
+  },
   "dependencies": {
-    "aframe": "^0.8.2",
-    "aframe-geojson-component": "^1.2.4",
-    "aframe-layout-component": "^4.3.1",
-    "axios": "^0.17.1",
+    "axios": "^0.18.0",
+    "babel-cli": "^6.26.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.2",
-    "isomorphic-fetch": "^2.2.1",
-    "lifescope-objects": "file:../lifescope-objects",
+    "babel-plugin-transform-flow-strip-types": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
     "nuxt": "^1.4.0"
   }
 }

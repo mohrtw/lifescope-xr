@@ -1,0 +1,45 @@
+{
+    "name": "lifescope-xr",
+    "version": "1.0.0",
+    "description": "A Vue.js component that displays lifescope objects in xr",
+    "main": "lib/module.js",
+    "files": [
+      "lib"
+    ],
+
+    "engines": {
+      "node": "10.0.0",
+      "yarn": "1.6.0"
+    },
+    "author": "(lifescope.io)",
+    "license": "MIT",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/lifescopelabs/lifescope-xr"
+    },
+    "devDependencies": {
+      "babel-core": "^6.10.4",
+      "babel-loader": "^7.1.4",
+      "babel-plugin-transform-runtime": "^6.9.0",
+      "babel-preset-env": "^1.6.1",
+      "babel-runtime": "^6.9.2",
+      "css-loader": "^0.28.11",
+      "nuxt-module-builder": "latest",
+      "rimraf": "^2.6.1",
+      "vue": "^2.2.1",
+      "vue-html-loader": "^1.2.3",
+      "vue-loader": "^15.0.6",
+      "vue-style-loader": "^4.1.0",
+      "vue-template-compiler": "^2.2.1",
+      "webpack": "^4.6.0",
+      "webpack-cli": "^2.1.2",
+      "webpack-merge": "^4.1.2"
+    },
+    "dependencies": {
+      "aframe": "^0.8.2",
+      "aframe-geojson-component": "^1.2.4",
+      "aframe-layout-component": "^4.3.1",
+      "lifescope-objects": "file:../lifescope-objects"
+    }
+  }
+  
