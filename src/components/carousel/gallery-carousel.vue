@@ -65,8 +65,24 @@ export default {
                 var segz = 6.2 * cosTheta;
 
                 var img = document.createElement("a-custom-image");
+                // get image dimensions and pass them in 
+                var srcWidth = 1;
+                var srcHeight = 1;
+
+                var texture = new THREE.TextureLoader().load( this.imageSrc(this.items[i]), function () {
+                    if (texture.image){
+                        srcWidth = texture.image.videoWidth || texture.image.width;
+                        srcHeight = texture.image.videoHeight || texture.image.height;
+                        console.log('gallery-carousel.vue');
+                        // console.log(srcWidth + ' | ' + srcHeight);
+                        img.setAttribute('src-width', 2.2); //arbitrary numbers to test if updated 
+                        img.setAttribute('src-height', 2.2);
+                    }
+                } );
+
+
                 img.setAttribute('src', this.imageSrc(this.items[i]));
-                var roty = theta * (180/Math.PI); // 
+                var roty = theta * (180/Math.PI); 
                 var rotx = 0;
                 img.setAttribute('rotation', rotx + ' ' + roty + ' 0');
                 img.setAttribute('position', segx + ' 1.5 ' + segz);

@@ -136,7 +136,9 @@ function createDioramaComponent(self) {
             self.data.radialsegments, self.data.radialsegments );
     }
     else if (self.data.geo == 'plack' || self.data.geo == 'case' || self.data.geo == 'safeguard') { // frosted case
-        geom = new THREE.BoxBufferGeometry( self.data.width, self.data.height, self.data.depth );
+        // geom = new THREE.BoxBufferGeometry( self.data.width, self.data.height, self.data.depth );
+        geom = new THREE.BoxBufferGeometry( self.data.srcWidth, self.data.srcHeight, self.data.depth );
+        geom.name = "case";
         geom.rotateX(2 * Math.PI * self.data.rotation / 360);
 
     }
@@ -187,7 +189,9 @@ function createDioramaComponent(self) {
 
     mesh = new THREE.Mesh(geom, material);
 
-
+    if (geom.name == "case") {
+        mesh.name = "case";
+    }
     var group = self.el.getObject3D('group') || new THREE.Group();
     //if (self.data.helper) {group.add(new THREE.BoxHelper(floor, HELPER_COLOR));}
     // group.add(new THREE.BoxHelper(mesh, 0xffff00));
@@ -221,7 +225,9 @@ AFRAME.registerComponent('diorama-component', {
         withBump: { default: false },
         withNormal: { default: false },
         cyl: { default: false },
-        helper: { default: false }
+        helper: { default: false },
+        srcWidth: {type: 'number', default: 1},
+        srcHeight: {type: 'number', default: 1}
     },
 
     multiple: true,
@@ -230,6 +236,35 @@ AFRAME.registerComponent('diorama-component', {
         var self = this;
 
         createDioramaComponent(self);    
+    },
+
+    update: function (oldData) {
+        console.log('update()');
+
+        var self = this;
+
+        // oldData null?
+        // console.log(oldData.srcWidth + ' | ' + oldData.srcHeight); 
+        console.log(self.data.srcWidth + ' | ' + self.data.srcHeight);
+
+        var grp = self.el.getObject3D('group');
+        var caseObj = grp.getObjectByName('case');
+        if (caseObj) {
+            console.log('case obj exists');
+            console.log(caseObj);
+            caseObj.scale.set( 1, 2, 1 ) // scale with function of srcWidth
+
+            // grp.remove(caseObj); //remove old case
+            // var geom = new THREE.BoxBufferGeometry(0.2,0.5,0.07);
+            // var mat = caseObj.material;
+            // caseObj = new THREE.Mesh(geom, mat); 
+            // console.log(caseObj);
+
+
+            grp.add(new THREE.BoxHelper(caseObj, 0xffff00));
+            // grp.add(caseObj); //add new group
+        }
+        console.log('-------');
     }
 });
 
@@ -520,17 +555,21 @@ AFRAME.registerPrimitive('a-custom-image', {
             'depth': frostedCaseDepth,
             'x': 0, 'y': 0, 
             'z' : -0.2 + frostedCaseDepth/2 + safeguardDepth + brassPlackDepth - 0.15,
-            'rotation': imagePlackRotation },
+            'rotation': imagePlackRotation,
+            'srcHeight': 0.5, 'srcWidth': 0.5
+         },
         'diorama-component__brass_plack': { 'geo': 'plack', 'mat': 'brass',
             'width': brassPlackWidth, 'height': brassPlackHeight, 'depth': brassPlackDepth,
             'x': 0, 'y': 0, 'z' : -0.2 + brassPlackDepth/2 + safeguardDepth - 0.15,
-            'rotation': imagePlackRotation },
+            'rotation': imagePlackRotation,
+            'srcHeight': 0.5, 'srcWidth': 0.5 },
         'diorama-component__brass_backing': { 'geo': 'plack', 'mat': 'wood',
             'width': woodBackingWidth, 'height': woodBackingHeight,
             'depth': woodBackingDepth,
             'x': 0, 'y': 0,
             'z' : -0.2 + woodBackingDepth/2 + frostedCaseDepth + safeguardDepth + brassPlackDepth - 0.15,
-            'rotation': imagePlackRotation },
+            'rotation': imagePlackRotation,
+            'srcHeight': 0.5, 'srcWidth': 0.5 },
         'stake-component': {'mat': 'brass',
             'width': 0.03, 'height':0.03, 'depth': 0.2,
             'x': 0, 'y': 0,
@@ -538,7 +577,9 @@ AFRAME.registerPrimitive('a-custom-image', {
             'rotation': imagePlackRotation },
     },
     mappings: {
-        'src': 'image-component.imageURL'
+        'src': 'image-component.imageURL',
+        'src-width': 'diorama-component.srcWidth',
+        'src-height': 'diorama-component.srcHeight'
     }
 });
 
