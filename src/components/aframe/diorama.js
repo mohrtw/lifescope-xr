@@ -136,7 +136,9 @@ function createDioramaComponent(self) {
             self.data.radialsegments, self.data.radialsegments );
     }
     else if (self.data.geo == 'plack' || self.data.geo == 'case' || self.data.geo == 'safeguard') { // frosted case
-        geom = new THREE.BoxBufferGeometry( self.data.width, self.data.height, self.data.depth );
+        // geom = new THREE.BoxBufferGeometry( self.data.width, self.data.height, self.data.depth );
+        geom = new THREE.BoxBufferGeometry( self.data.srcWidth, self.data.srcHeight, self.data.depth );
+        geom.name = "case";
         geom.rotateX(2 * Math.PI * self.data.rotation / 360);
 
     }
@@ -187,7 +189,9 @@ function createDioramaComponent(self) {
 
     mesh = new THREE.Mesh(geom, material);
 
-
+    if (geom.name == "case") {
+        mesh.name = "case";
+    }
     var group = self.el.getObject3D('group') || new THREE.Group();
     //if (self.data.helper) {group.add(new THREE.BoxHelper(floor, HELPER_COLOR));}
     // group.add(new THREE.BoxHelper(mesh, 0xffff00));
@@ -221,7 +225,9 @@ AFRAME.registerComponent('diorama-component', {
         withBump: { default: false },
         withNormal: { default: false },
         cyl: { default: false },
-        helper: { default: false }
+        helper: { default: false },
+        srcWidth: {type: 'number', default: 1},
+        srcHeight: {type: 'number', default: 1}
     },
 
     multiple: true,
@@ -230,6 +236,35 @@ AFRAME.registerComponent('diorama-component', {
         var self = this;
 
         createDioramaComponent(self);    
+    },
+
+    update: function (oldData) {
+        console.log('update()');
+
+        var self = this;
+
+        // oldData null?
+        // console.log(oldData.srcWidth + ' | ' + oldData.srcHeight); 
+        console.log(self.data.srcWidth + ' | ' + self.data.srcHeight);
+
+        var grp = self.el.getObject3D('group');
+        var caseObj = grp.getObjectByName('case');
+        if (caseObj) {
+            console.log('case obj exists');
+            console.log(caseObj);
+            caseObj.scale.set( 1, 2, 1 ) // scale with function of srcWidth
+
+            // grp.remove(caseObj); //remove old case
+            // var geom = new THREE.BoxBufferGeometry(0.2,0.5,0.07);
+            // var mat = caseObj.material;
+            // caseObj = new THREE.Mesh(geom, mat); 
+            // console.log(caseObj);
+
+
+            grp.add(new THREE.BoxHelper(caseObj, 0xffff00));
+            // grp.add(caseObj); //add new group
+        }
+        console.log('-------');
     }
 });
 
@@ -347,6 +382,118 @@ function createImageComponent(self) {
     } );
 }
 
+function formatTextDashes(text, boardWidth, maxChars) {
+    if (text.length > maxChars) {
+        text = text.substring(0,maxChars-3) + "..."
+    }
+    var charPixelRatio = 1.0;
+    var charsPerRow = boardWidth / charPixelRatio;
+
+    // if (text.length < charsPerRow) {
+    //     return text;
+    // }
+
+    var i = 0;
+    var formattedText = "";
+    while (i < text.length - charsPerRow) {
+        if (text.substring(i+charsPerRow-1,i+charsPerRow) == "." || text.substring(i+charsPerRow-1,i+charsPerRow) == " ") {
+            formattedText += text.substring(i,i+charsPerRow) + "\n";
+            if (text.substring(i+charsPerRow,i+charsPerRow+1) == " ") {
+                i += 1; //skip space on new line
+            }
+            i += charsPerRow;
+        }
+        else {
+            formattedText += text.substring(i,i+charsPerRow-1) + "-\n";
+            i += charsPerRow-1;
+        }
+    }
+    formattedText += text.substring(i, i+charsPerRow);
+
+    return formattedText;
+}
+
+function formatTextNewlines(text, boardWidth, maxChars) {
+    if (text.length > maxChars) {
+        text = text.substring(0,maxChars-3) + "..."
+    }
+    var charPixelRatio = 1.0;
+    var charsPerRow = boardWidth / charPixelRatio;
+
+    var words = text.split(" ");
+
+    var curNumChars = 0;
+    var formattedText = "";
+    for (var i = 0; i < words.length; i++) {
+        if (words[i].length > boardWidth) {
+            formattedText += words[i].substring(0, boardWidth - curNumChars) + "-\n"; // no other choice but to use -
+            words[i] = words[i].substring(boardWidth - curNumChars, words[i].length);
+            i -= 1; //keep trying this word until done with it
+            curNumChars = 0; //because now on new line
+        }
+        else {
+            if (boardWidth - curNumChars >= words[i].length) { // have room for full next word
+                formattedText += words[i] + " ";
+                curNumChars += words[i].length;
+            }
+            else {
+                formattedText += "\n" + words[i] + " ";
+                curNumChars = 0 + words[i].length; 
+            }
+        }
+    }
+    return formattedText;
+}
+
+function createTextComponent(self) {
+    var material, geom, mesh;
+
+    console.log('creating text geometry');
+    console.log('self.data.rotation = ' + self.data.rotation);
+    var fontLoader = new THREE.FontLoader();
+    
+    var font = fontLoader.load( self.data.font, //anonymous regular is monospace    
+        function ( font ) {
+            var charsPerRow = 29;
+            var maxChars = 200;
+            var text = formatTextNewlines(self.data.text, charsPerRow, maxChars)
+
+            var shapes = font.generateShapes( text, 0.02 );
+            
+            var textGeom = new THREE.ShapeBufferGeometry( shapes );
+            textGeom.computeBoundingBox();
+            textGeom.rotateX((2 * Math.PI * self.data.rotation / 360));
+            textGeom.rotateY(Math.PI);
+            textGeom.rotateX((2 * Math.PI * 60 / 360)); // why 60?
+            
+            textGeom.translate(self.data.x, self.data.y, self.data.z);
+            textGeom.translate(0,0,-0.02); //so it's not right inside the plank
+
+            var textMat = new THREE.MeshPhongMaterial( { color: 0x000 } );
+
+            mesh = new THREE.Mesh( textGeom, textMat );
+
+                
+            var group = self.el.getObject3D('group') || new THREE.Group();
+            // group.add(new THREE.BoxHelper(mesh, 0xffff00));
+
+            group.add(mesh);
+
+            self.el.setObject3D('group', group);
+        },
+        // onProgress callback
+        function ( xhr ) {
+            console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+        },
+        
+        // onError callback
+        function ( err ) {
+            console.log( 'An error happened: ' + err );
+        }
+    );
+
+}
+
 AFRAME.registerComponent('image-component', {
     schema: {
         imageURL: {type: 'string', default: 'https://i.imgur.com/gmem7Ca.jpg'},
@@ -368,8 +515,32 @@ AFRAME.registerComponent('image-component', {
     }
 });
 
+AFRAME.registerComponent('text-component', {
+    schema: {
+        text: { type: 'string', default: "Hello, my friends. I am back with a new tutorial. Yes, you heard me correctly."},
+        font: { type: 'string', default: '/static/fonts/Anonymous_Regular.json'},
+        x: { type: 'number', default: 0},
+        y: { type: 'number', default: 0},
+        z: { type: 'number', default: 0},
+        opacity: { type: 'number', default: 1 },
+    },
+
+    multiple: true,
+
+    init: function() {
+        var self = this;
+        createTextComponent(self);
+    }
+});
+
 AFRAME.registerPrimitive('a-custom-image', {
     defaultComponents: {
+        'text-component': {
+            'x': imagePlackWidth/2, 'y': imagePlackHeight/4, 'z' : -0.2 + -0.15 + 0.08,
+            'rotation': imagePlackRotation,
+            'text': "This is a contrived test paragraph. Hopefully this covers the necessary corner cases, but I'm not exactly sure what they might be... Good attempt, I hope. Here is another sentence to test the way the line cuts off.",
+            'geo' : 'text'
+        },
         'image-component': {imageURL: 'https://i.imgur.com/gmem7Ca.jpg',
             'width': imagePlackWidth -0.1, 'height': imagePlackHeight,
             'depth': imagePlackDepth,
@@ -384,17 +555,21 @@ AFRAME.registerPrimitive('a-custom-image', {
             'depth': frostedCaseDepth,
             'x': 0, 'y': 0, 
             'z' : -0.2 + frostedCaseDepth/2 + safeguardDepth + brassPlackDepth - 0.15,
-            'rotation': imagePlackRotation },
+            'rotation': imagePlackRotation,
+            'srcHeight': 0.5, 'srcWidth': 0.5
+         },
         'diorama-component__brass_plack': { 'geo': 'plack', 'mat': 'brass',
             'width': brassPlackWidth, 'height': brassPlackHeight, 'depth': brassPlackDepth,
             'x': 0, 'y': 0, 'z' : -0.2 + brassPlackDepth/2 + safeguardDepth - 0.15,
-            'rotation': imagePlackRotation },
+            'rotation': imagePlackRotation,
+            'srcHeight': 0.5, 'srcWidth': 0.5 },
         'diorama-component__brass_backing': { 'geo': 'plack', 'mat': 'wood',
             'width': woodBackingWidth, 'height': woodBackingHeight,
             'depth': woodBackingDepth,
             'x': 0, 'y': 0,
             'z' : -0.2 + woodBackingDepth/2 + frostedCaseDepth + safeguardDepth + brassPlackDepth - 0.15,
-            'rotation': imagePlackRotation },
+            'rotation': imagePlackRotation,
+            'srcHeight': 0.5, 'srcWidth': 0.5 },
         'stake-component': {'mat': 'brass',
             'width': 0.03, 'height':0.03, 'depth': 0.2,
             'x': 0, 'y': 0,
@@ -402,7 +577,9 @@ AFRAME.registerPrimitive('a-custom-image', {
             'rotation': imagePlackRotation },
     },
     mappings: {
-        'src': 'image-component.imageURL'
+        'src': 'image-component.imageURL',
+        'src-width': 'diorama-component.srcWidth',
+        'src-height': 'diorama-component.srcHeight'
     }
 });
 
